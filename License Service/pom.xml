@@ -44,6 +44,11 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <image>
+                        <name>${docker.image.prefix}/${project.artifactId}:latest</name>
+                    </image>
+                </configuration>
             </plugin>
             <!-- This plugin is used to create a Docker image and publish it to Docker hub -->
             <plugin>
