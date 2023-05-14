@@ -1,12 +1,15 @@
 package com.vula.license.service;
 
+import com.vula.license.config.ServiceConfig;
 import com.vula.license.model.License;
+import com.vula.license.repository.LicenseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 
 import java.util.Locale;
 import java.util.Random;
+import java.util.UUID;
 
 @Service
 public class LicenseService {
@@ -14,51 +17,47 @@ public class LicenseService {
     @Autowired
     private MessageSource messages;
 
+    @Autowired
+    private LicenseRepository licenseRepository;
+
+    @Autowired
+    private ServiceConfig config;
+
     public License getLicense(String licenseId, String organizationId) {
+        License license = licenseRepository.findByOrganizationIdAndLicenseId(
+            organizationId, licenseId
+        );
+        if (license == null) {
+            throw new IllegalArgumentException(
+                String.format(
+                    messages.getMessage("license.search.error.message", null, null),
+                    licenseId,
+                    organizationId
+                )
+            );
+        }
+        return license.withComment(config.getProperty());
+    }
+
+    public License createLicense(License license) {
+        license.setLicenseId(UUID.randomUUID().toString());
+        licenseRepository.save(license);
+        return license.withComment(config.getProperty());
+    }
+
+    public License updateLicense(License license) {
+        licenseRepository.save(license);
+        return license.withComment(config.getProperty());
+    }
+
+    public String deleteLicense(String licenseId) {
+        String responseMessage;
         License license = new License();
-        license.setId(new Random().nextInt(1000));
         license.setLicenseId(licenseId);
-        license.setOrganisationId(organizationId);
-        license.setDescription("Software product");
-        license.setProductName("VSoft");
-        license.setLicenseType("full");
-        return license;
-    }
-
-    public String createLicense(
-        License license,
-        String organizationId,
-        Locale locale
-    ) {
-        String responseMessage = null;
-        if (license != null) {
-            license.setOrganisationId(organizationId);
-            responseMessage = String.format(
-                messages.getMessage("license.create.message", null, locale),
-                license
-            );
-        }
-        return responseMessage;
-    }
-
-    public String updateLicense(License license, String organizationId) {
-        String responseMessage = null;
-        if (license != null) {
-            license.setOrganisationId(organizationId);
-            responseMessage = String.format(
-                messages.getMessage("license.update.message", null, null),
-                license
-            );
-        }
-        return responseMessage;
-    }
-
-    public String deleteLicense(String licenseId, String organizationId) {
-        String responseMessage = null;
+        licenseRepository.delete(license);
         responseMessage = String.format(
-            "Deleting license with id %s for the organization %s",
-            licenseId,
-            organizationId
+            messages.getMessage("license.delete.message", null, null),
+            licenseId
         );
         return responseMessage;
     }
