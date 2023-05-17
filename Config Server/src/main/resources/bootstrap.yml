@@ -2,7 +2,7 @@ spring:
   application:
     name: config-server
   profiles:
-    active: native
+    active: git
   
   cloud:
     config:
@@ -11,6 +11,9 @@ spring:
         native:
           # reads from a specific filesystem folder
           search-locations: classpath:/config
+        git:
+          uri: https://github.com/vu-luong/spring-boot-microservices.git
+          search-paths: config/license-service
 
 server:
   port: 8071
