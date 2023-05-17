@@ -13,7 +13,7 @@ spring:
           search-locations: classpath:/config
         git:
           uri: https://github.com/vu-luong/spring-boot-microservices.git
-          search-paths: config/license-service
+          search-paths: /config
 
 server:
   port: 8071
