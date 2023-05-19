@@ -2,18 +2,14 @@ spring:
   application:
     name: config-server
   profiles:
-    active: git
-  
+    active: vault
   cloud:
     config:
       server:
-        # local configuration: This locations can either of classpath or locations in the filesystem.
-        native:
-          # reads from a specific filesystem folder
-          search-locations: classpath:/config
-        git:
-          uri: https://github.com/vu-luong/spring-boot-microservices.git
-          search-paths: /config
+        vault:
+          port: 8200
+          host: 127.0.0.1
+          kv-version: 2
 
 server:
   port: 8071
