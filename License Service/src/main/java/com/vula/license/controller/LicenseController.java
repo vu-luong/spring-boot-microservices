@@ -18,7 +18,7 @@ public class LicenseController {
         @PathVariable("organizationId") String organizationId,
         @PathVariable("licenseId") String licenseId
     ) {
-        License license = licenseService.getLicense(licenseId, organizationId);
+        License license = licenseService.getLicense(licenseId, organizationId, "");
         return ResponseEntity.ok(license);
     }
 
