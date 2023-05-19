@@ -2,10 +2,15 @@ spring:
   application:
     name: config-server
   profiles:
-    active: vault
+    active: native
   cloud:
     config:
       server:
+        native:
+          search-locations: classpath:/config
+        git:
+          uri: https://github.com/vu-luong/spring-boot-microservices.git
+          search-paths: /config
         vault:
           port: 8200
           host: 127.0.0.1
