@@ -1,17 +1,17 @@
 package com.vula.license.service.client;
 
 import com.vula.license.model.Organization;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 @Component
+@AllArgsConstructor
 public class OrganizationRestTemplateClient {
     
-    @Autowired
-    private RestTemplate restTemplate;
+    private final RestTemplate restTemplate;
 
     public Organization getOrganization(String organizationId){
         ResponseEntity<Organization> restExchange =

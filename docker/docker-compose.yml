@@ -10,6 +10,7 @@ services:
       POSTGRES_DB: "vula_dev"
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/1-init.sql
+      - ./data.sql:/docker-entrypoint-initdb.d/2-init.sql
     networks:
       backend:
         aliases:
@@ -27,6 +28,19 @@ services:
       backend:
         aliases:
           - "configserver"
+  eurekaserver:
+    image: vula/eureka-server:0.0.1-SNAPSHOT
+    ports:
+      - "8070:8070"
+    depends_on:
+      database:
+        condition: service_healthy
+      configserver:
+        condition: service_started
+    networks: 
+      backend:
+        aliases:
+          - "eurekaserver"
   licenseservice:
     image: vula/license-service:0.0.1-SNAPSHOT
     environment:
