@@ -7,7 +7,12 @@ import com.vula.license.repository.LicenseRepository;
 import com.vula.license.service.client.OrganizationDiscoveryClient;
 import com.vula.license.service.client.OrganizationFeignClient;
 import com.vula.license.service.client.OrganizationRestTemplateClient;
+import com.vula.license.utils.UserContextHolder;
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
+import io.github.resilience4j.bulkhead.annotation.Bulkhead.Type;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +22,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeoutException;
 
 @Service
@@ -104,9 +110,22 @@ public class LicenseService {
     }
 
     @CircuitBreaker(name = "licenseService", fallbackMethod = "buildFallbackLicenseList")
-    public List<License> getLicensesByOrganization(String organizationId) throws TimeoutException {
-        randomlyRunLong();
-        return licenseRepository.findByOrganizationId(organizationId);
+    @RateLimiter(name = "licenseService", fallbackMethod = "buildFallbackLicenseList")
+    @Retry(name = "retryLicenseService", fallbackMethod = "buildFallbackLicenseList")
+    @Bulkhead(name = "bulkheadLicenseService", type=Type.THREADPOOL, fallbackMethod = "buildFallbackLicenseList")
+    public CompletableFuture<List<License>> getLicensesByOrganization(String organizationId) throws TimeoutException {
+        return CompletableFuture.supplyAsync(() -> {
+            logger.debug(
+                "getLicensesByOrganization Correlation id: {}",
+                UserContextHolder.getContext().getCorrelationId()
+            );
+            try {
+                randomlyRunLong();
+            } catch (TimeoutException e) {
+                throw new RuntimeException(e);
+            }
+            return licenseRepository.findByOrganizationId(organizationId);
+        });
     }
 
     private void randomlyRunLong() throws TimeoutException {
@@ -127,11 +146,13 @@ public class LicenseService {
     }
 
     @SuppressWarnings("unused")
-    private List<License> buildFallbackLicenseList(String organizationId, Throwable t) {
-        License license = new License();
-        license.setLicenseId("0000000-00-00000");
-        license.setOrganizationId(organizationId);
-        license.setProductName("Sorry no licensing information currently available");
-        return List.of(license);
+    private CompletableFuture<List<License>> buildFallbackLicenseList(String organizationId, Throwable t) {
+        return CompletableFuture.supplyAsync(() -> {
+            License license = new License();
+            license.setLicenseId("0000000-00-00000");
+            license.setOrganizationId(organizationId);
+            license.setProductName("Sorry no licensing information currently available");
+            return List.of(license);
+        });
     }
 }

@@ -2,11 +2,15 @@ package com.vula.license.controller;
 
 import com.vula.license.model.License;
 import com.vula.license.service.LicenseService;
+import com.vula.license.utils.UserContextHolder;
 import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 @RestController
@@ -15,6 +19,8 @@ import java.util.concurrent.TimeoutException;
 public class LicenseController {
 
     private final LicenseService licenseService;
+
+    private static final Logger logger = LoggerFactory.getLogger(LicenseController.class);
 
     @GetMapping(value = "/{licenseId}")
     public ResponseEntity<License> getLicense(
@@ -56,7 +62,11 @@ public class LicenseController {
     @GetMapping(value = "/")
     public List<License> getLicenses(
         @PathVariable("organizationId") String organizationId
-    ) throws TimeoutException {
-        return licenseService.getLicensesByOrganization(organizationId);
+    ) throws TimeoutException, ExecutionException, InterruptedException {
+        logger.debug(
+            "LicenseServiceController Correlation id: {}",
+            UserContextHolder.getContext().getCorrelationId()
+        );
+        return licenseService.getLicensesByOrganization(organizationId).get();
     }
 }

@@ -6,7 +6,13 @@ spring:
   cloud:
     config:
       uri: http://configserver:8071
-      
+
+logging:
+  level:
+    com.netflix: WARN
+    org.springframework.web: WARN
+    com.vula: DEBUG
+
 management:
   endpoints:
     enabled-by-default: false
@@ -15,29 +21,57 @@ management:
       enabled: true
       show-details: always
 
-resilience4j:
-  circuitbreaker:
-    instances:
-      licenseService:
-        register-health-indicator: true
-        ring-buffer-size-in-closed-state: 5
-        ring-buffer-size-in-half-open-state: 3
-        wait-duration-in-open-state: 10s
-        failure-rate-threshold: 50
-        record-exceptions:
-          - org.springframework.web.client.HttpServerErrorException
-          - java.io.IOException
-          - java.util.concurrent.TimeoutException
-          - org.springframework.web.client.ResourceAccessException
-      organizationService:
-        register-health-indicator: true
-        ring-buffer-size-in-closed-state: 6
-        ring-buffer-size-in-half-open-state: 4
-        wait-duration-in-open-state: 20s
-        failure-rate-threshold: 60
+resilience4j.circuitbreaker:
+  instances:
+    licenseService:
+      registerHealthIndicator: true
+      ringBufferSizeInClosedState: 5
+      ringBufferSizeInHalfOpenState: 3
+      waitDurationInOpenState: 10s
+      failureRateThreshold: 50
+      recordExceptions:
+        - org.springframework.web.client.HttpServerErrorException
+        - java.io.IOException
+        - java.util.concurrent.TimeoutException
+        - org.springframework.web.client.ResourceAccessException
+    organizationService:
+      registerHealthIndicator: true
+      ringBufferSizeInClosedState: 6
+      ringBufferSizeInHalfOpenState: 4
+      waitDurationInOpenState: 20s
+      failureRateThreshold: 60
+
+resilience4j.ratelimiter:
+  instances:
+    licenseService:
+      limitForPeriod: 5
+      limitRefreshPeriod: 5000
+      timeoutDuration: 1000ms
+
+resilience4j.retry:
+  instances:
+    retryLicenseService:
+      maxRetryAttempts: 5
+      waitDuration: 10000
+      retry-exceptions:
+        - java.util.concurrent.TimeoutException
+
+resilience4j.bulkhead:
+  instances:
+    bulkheadLicenseService:
+      maxWaitDuration: 5s
+      maxConcurrentCalls: 20
+
+
+resilience4j.thread-pool-bulkhead:
+  instances:
+    bulkheadLicenseService:
+      maxThreadPoolSize: 10
+      coreThreadPoolSize: 10
+      queueCapacity: 5
 ---
 spring:
   profiles: local
   cloud:
-      config:
-        uri: http://localhost:8071
+    config:
+      uri: http://localhost:8071
