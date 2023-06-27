@@ -11,3 +11,9 @@ eureka:
         http://${eureka.instance.hostname}:${server.port}/eureka/
   server:
     waitTimeInMsWhenSyncEmpty: 5
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
