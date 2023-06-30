@@ -10,6 +10,11 @@ mvn clean package
 
 cd ..
 
+cd "API Gateway Server"
+mvn clean package
+
+cd ..
+
 cd "License Service"
 mvn clean package
 
