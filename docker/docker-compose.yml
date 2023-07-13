@@ -76,7 +76,7 @@ services:
       configserver:
         condition: service_started
     ports:
-      - "8080:8080"
+      - "8180:8080"
     networks:
       - backend
   organizationservice:
@@ -95,6 +95,18 @@ services:
       - "8081:8081"
     networks:
       - backend
+  keycloak:
+    image: jboss/keycloak
+    restart: always
+    environment:
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: admin
+    ports:
+      - "8080:8080"
+    networks:
+      backend:
+        aliases:
+          - "keycloak"
 networks:
   backend:
     driver: bridge
